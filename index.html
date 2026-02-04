@@ -1,25 +1,96 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="EcoRecicla - Plataforma de reciclagem e doações para preservação do meio ambiente">
-  <meta name="theme-color" content="#15803d">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="EcoRecicla - Plataforma de reciclagem e doações para preservação do meio ambiente"/>
+  <meta name="theme-color" content="#15803d"/>
   <title>EcoRecicla - Meio Ambiente e Reciclagem</title>
-  
+
   <!-- CSS -->
-  <link rel="stylesheet" href="css/style.css">
-  
+  <link rel="stylesheet" href="style.css"/>
+
   <!-- Leaflet para mapa -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <style>
+    /* Pequeno estilo local para garantir que o mapa apareça. 
+       Se já tem no style.css, deixe-o ou remova daqui. */
+    :root {
+      --green: #15803d;
+      --muted: #4b5563;
+      --bg-card: #f8faf9;
+    }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; color:#0f172a; }
+    /* header base */
+    header {
+      background: var(--green);
+      color: #fff;
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      transition: padding 180ms ease, box-shadow 180ms ease, backdrop-filter 180ms ease;
+      will-change: padding, box-shadow;
+      backdrop-filter: none;
+    }
+    /* header when scrolled - smaller */
+    header.scrolled {
+      padding: 6px 20px;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+      backdrop-filter: saturate(140%) blur(4px);
+      background: rgba(21,128,61,0.98);
+    }
+
+    nav { display:flex; align-items:center; justify-content:space-between; max-width:1200px; margin:0 auto; }
+    nav .logo { display:flex; align-items:center; gap:8px; color:white; text-decoration:none; font-weight:700; transition: transform 180ms ease, font-size 180ms ease; }
+    /* shrink logo slightly when scrolled */
+    header.scrolled nav .logo { transform: translateY(-2px) scale(.94); font-size: .95rem; }
+
+    nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 1rem; align-items: center; }
+    nav a { color: #f8faf9; text-decoration: none; padding:8px 10px; border-radius:6px; transition: padding 180ms ease, opacity 180ms ease; }
+    header.scrolled nav a { padding:6px 8px; opacity:.95; }
+    nav a.active { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.06); }
+
+    main { max-width:1200px; margin: 0 auto; padding: 2rem 1rem; }
+    .hero { background: linear-gradient(180deg, rgba(21,128,61,0.06), rgba(21,128,61,0.02)); padding: 3rem 1rem; border-radius: 8px; text-align:center; margin-bottom:2rem; }
+    .cta-buttons { display:flex; gap:1rem; justify-content:center; margin-top:1rem; }
+    .grid { display:grid; gap:1rem; }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .card { background:var(--bg-card); padding:1.2rem; border-radius:8px; box-shadow: 0 1px 3px rgba(2,6,23,0.04); }
+    .section-green { padding:1.5rem 0; background: rgba(22,163,74,0.03); border-radius:8px; margin-bottom:1.5rem; }
+    footer { padding: 1.2rem; background:#0f172a; color:#fff; margin-top:2rem; }
+
+    #map { height: 420px; min-height: 300px; width: 100%; border-radius: 8px; }
+    .alert { padding: 12px; border-radius: 6px; background: #f3f4f6; color: #111827; }
+    .alert-info { background:#eef2ff; }
+    .alert-danger { background:#fee2e2; }
+    .btn { padding: 8px 12px; border-radius:6px; display:inline-block; text-decoration:none; cursor:pointer; border: none; }
+    .btn-primary { background:var(--green); color:white; }
+    .btn-secondary { background:#4b5563; color:white; }
+    .btn-danger { background:#dc2626; color:white; }
+    .form-group { margin-bottom: 1rem; }
+    input, select, textarea { width:100%; padding:8px; border-radius:6px; border:1px solid #d1d5db; box-sizing:border-box; }
+    .faq-q { width:100%; padding:12px; text-align:left; background:#fff; border-radius:6px; border:1px solid #e5e7eb; cursor:pointer; margin-top:8px; }
+    .faq-a { padding:10px 12px; background:#f8fafc; border-radius:6px; margin-top:6px; border:1px solid #eef2ff; }
+    .center-item { padding:8px; border-radius:6px; background:#fff; border:1px solid #e6eef2; }
+    .schedules-controls { display:flex; gap:8px; align-items:center; }
+    .schedule-checkbox { margin-right:8px; transform:scale(1.05); }
+    @media (max-width: 900px) {
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: 1fr; }
+      nav ul { gap: 0.6rem; }
+    }
+  </style>
 </head>
 <body>
   <!-- HEADER E NAVEGAÇÃO -->
   <header>
     <nav>
       <a href="#home" class="logo">
-        <svg viewBox="0 0 24 24" fill="currentColor">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28" style="vertical-align:middle; margin-right:6px; color: #fff;">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
         </svg>
         EcoRecicla
@@ -40,10 +111,10 @@
       <!-- Hero Section -->
       <section class="hero">
         <div class="container">
-          <h2>Juntos pela Sustentabilidade</h2>
-          <p>A EcoRecicla é uma iniciativa dedicada a promover a reciclagem e a preservação do meio ambiente. Ajude-nos a criar um futuro mais sustentável!</p>
+          <h1 style="font-size:2.2rem; color:var(--green); margin:0 0 0.5rem;">Juntos pela Sustentabilidade</h1>
+          <p style="max-width:760px; margin:0 auto; color:#475569;">A EcoRecicla é uma iniciativa dedicada a promover a reciclagem e a preservação do meio ambiente. Ajude-nos a criar um futuro mais sustentável!</p>
           <div class="cta-buttons">
-            <a href="#donate" class="btn btn-primary">Fazer uma Doação</a>
+            <a href="#donate" class="btn btn-primary">Agendar Doação / Coleta</a>
             <a href="#centers" class="btn btn-secondary">Encontrar Centros</a>
           </div>
         </div>
@@ -52,28 +123,19 @@
       <!-- Por que Reciclar -->
       <section class="section-green">
         <div class="container">
-          <h3 style="text-align: center; color: #15803d; margin-bottom: 2rem;">Por que Reciclar?</h3>
+          <h3 style="text-align: center; color: var(--green); margin-bottom: 2rem;">Por que Reciclar?</h3>
           <div class="grid grid-3">
             <div class="card">
-              <svg class="card-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-0.9-2-2-2zM1 2v6h6M9.31 7.71L6.7 4.1C6.08 3.47 5.07 3.47 4.45 4.1l-2.15 2.15C1.68 6.87 1.68 7.88 2.3 8.5l2.6 2.6c0.62 0.62 1.63 0.62 2.25 0l5.5-5.5c0.62-0.62 0.62-1.63 0-2.25L9.31 1.1c-0.62-0.62-1.63-0.62-2.25 0L1.56 6.6c-0.62 0.62-0.62 1.63 0 2.25l2.15 2.15c0.62 0.62 1.63 0.62 2.25 0l5.5-5.5c0.62-0.62 0.62-1.63 0-2.25L9.31 7.71zM17 18c-1.1 0-1.99.9-1.99 2s0.89 2 1.99 2 2-0.9 2-2-0.9-2-2-2z"/>
-              </svg>
               <h4>Reduz Desperdício</h4>
               <p>A reciclagem reduz a quantidade de resíduos em aterros sanitários e preserva recursos naturais.</p>
             </div>
 
             <div class="card">
-              <svg class="card-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.92 7.02C17.45 4.18 14.97 2 12 2c-2.97 0-5.45 2.18-5.92 5.02C4.97 7.55 3 9.88 3 12.5 3 16.04 5.96 19 9.5 19h8c3.04 0 5.5-2.46 5.5-5.5 0-2.62-1.97-4.95-4.58-5.48zM14 13v4h-4v-4H8l4-5 4 5h-2z"/>
-              </svg>
               <h4>Protege o Meio Ambiente</h4>
               <p>Cada item reciclado contribui para a preservação dos ecossistemas e biodiversidade.</p>
             </div>
 
             <div class="card">
-              <svg class="card-icon" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
               <h4>Cria Impacto Social</h4>
               <p>Suas doações ajudam comunidades e geram oportunidades de trabalho sustentável.</p>
             </div>
@@ -82,11 +144,11 @@
       </section>
 
       <!-- Call to Action -->
-      <section class="section-dark">
+      <section style="margin-top:1rem;">
         <div class="container" style="text-align: center;">
-          <h3>Comece Hoje Mesmo</h3>
-          <p>Encontre o centro de doação mais próximo e contribua para um planeta mais limpo.</p>
-          <a href="#centers" class="btn btn-primary" style="background-color: white; color: #15803d; margin-top: 1rem;">Ver Centros de Doação</a>
+          <h3 style="color:var(--green);">Comece Hoje Mesmo</h3>
+          <p style="color:#6b7280;">Encontre o centro de doação mais próximo ou agende uma coleta para retirar sua doação no conforto de casa.</p>
+          <a href="#donate" class="btn btn-primary" style="margin-top: 1rem;">Agendar Doação</a>
         </div>
       </section>
     </div>
@@ -95,244 +157,167 @@
     <div id="page-about" style="display: none;">
       <section>
         <div class="container">
-          <h2 style="color: #15803d; margin-bottom: 2rem;">Sobre a EcoRecicla</h2>
+          <h2 style="color: var(--green); margin-bottom: 1rem;">Sobre a EcoRecicla</h2>
+          <p>Nossa missão é aproximar pessoas e centros de reciclagem, faciltiando o descarte correto e promovendo economia circular.</p>
 
-          <!-- Nossa Missão -->
-          <div style="margin-bottom: 3rem;">
-            <h3>Nossa Missão</h3>
-            <p>A EcoRecicla é uma organização dedicada a promover práticas sustentáveis de reciclagem e preservação do meio ambiente. Acreditamos que cada ação conta e que juntos podemos criar um futuro mais limpo e verde para as próximas gerações.</p>
-          </div>
-
-          <!-- Nossos Valores -->
-          <div style="margin-bottom: 3rem;">
-            <h3 style="margin-bottom: 2rem;">Nossos Valores</h3>
-            <div class="grid grid-2">
-              <div class="card">
-                <h4>Sustentabilidade</h4>
-                <p>Comprometidos com práticas que preservam o meio ambiente para futuras gerações.</p>
-              </div>
-              <div class="card">
-                <h4>Comunidade</h4>
-                <p>Acreditamos no poder da colaboração e engajamento comunitário para mudanças reais.</p>
-              </div>
-              <div class="card">
-                <h4>Responsabilidade</h4>
-                <p>Assumimos a responsabilidade de cuidar do nosso planeta e seus recursos.</p>
-              </div>
-              <div class="card">
-                <h4>Inovação</h4>
-                <p>Buscamos constantemente novas formas de melhorar nossas práticas de reciclagem.</p>
-              </div>
+          <div style="margin-top:1.5rem;" class="grid grid-2">
+            <div class="card">
+              <h3>Nossa Missão</h3>
+              <p>Promover práticas sustentáveis e tornar a reciclagem acessível para todos.</p>
+            </div>
+            <div class="card">
+              <h3>Nossos Valores</h3>
+              <p>Transparência, responsabilidade e impacto social.</p>
             </div>
           </div>
 
-          <!-- Nosso Impacto -->
-          <div class="section-green" style="margin: 0 -1rem; padding: 2rem 1rem;">
-            <div class="container">
-              <h3 style="text-align: center; margin-bottom: 2rem;">Nosso Impacto</h3>
-              <div class="grid grid-3" style="text-align: center;">
-                <div>
-                  <div style="font-size: 2.5rem; font-weight: bold; color: #16a34a; margin-bottom: 0.5rem;">50+</div>
-                  <p>Centros de Doação Ativos</p>
-                </div>
-                <div>
-                  <div style="font-size: 2.5rem; font-weight: bold; color: #16a34a; margin-bottom: 0.5rem;">10K+</div>
-                  <p>Doações Processadas</p>
-                </div>
-                <div>
-                  <div style="font-size: 2.5rem; font-weight: bold; color: #16a34a; margin-bottom: 0.5rem;">500T+</div>
-                  <p>Resíduos Reciclados</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- CTA -->
-          <div style="text-align: center; margin-top: 3rem;">
-            <h3>Quer Fazer Parte?</h3>
-            <p>Junte-se a nós na missão de criar um mundo mais sustentável.</p>
-            <div class="cta-buttons" style="justify-content: center;">
-              <a href="#donate" class="btn btn-primary">Fazer uma Doação</a>
-              <a href="#contact" class="btn btn-secondary">Entre em Contato</a>
-            </div>
+          <div style="margin-top:1.5rem;" class="card">
+            <h3>Como Funciona</h3>
+            <ol>
+              <li>Encontre um centro no mapa ou solicite coleta em sua casa;</li>
+              <li>Veja quais materiais cada centro aceita;</li>
+              <li>Agende dia e hora ou leve até o centro.</li>
+            </ol>
           </div>
         </div>
       </section>
     </div>
 
-    <!-- PÁGINA CONTATOS -->
+    <!-- PÁGINA CONTATOS (substituído por FAQ + WhatsApp CTA) -->
     <div id="page-contact" style="display: none;">
       <section>
         <div class="container">
-          <h2 style="color: #15803d; margin-bottom: 2rem;">Entre em Contato</h2>
+          <h2 style="color: var(--green); margin-bottom: 1rem;">Fale Conosco</h2>
+          <p style="color:#374151;">Antes de enviar mensagem, veja as perguntas mais frequentes. Para atendimento direto, clique no WhatsApp.</p>
 
-          <div class="grid grid-2">
-            <!-- Informações de Contato -->
-            <div>
-              <h3>Informações de Contato</h3>
-              <div style="margin-top: 2rem;">
-                <div class="center-info">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="1"></circle>
-                    <path d="M4 12c0-1.657.895-3.253 2.336-4.082"></path>
-                    <path d="M19.364 7.918C20.105 8.747 20.5 9.873 20.5 11"></path>
-                  </svg>
-                  <div>
-                    <h4>Email</h4>
-                    <p>contato@ecorecicla.com.br</p>
-                  </div>
-                </div>
+          <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            <div style="flex:1; min-width:280px;">
+              <div class="card">
+                <h3>Perguntas Frequentes</h3>
 
-                <div class="center-info" style="margin-top: 2rem;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                  </svg>
-                  <div>
-                    <h4>Telefone</h4>
-                    <p>(11) 3000-0000</p>
-                  </div>
-                </div>
+                <button class="faq-q" data-target="faq1">Quais materiais posso doar?</button>
+                <div id="faq1" class="faq-a" style="display:none;">Aceitamos plástico, papel/papelão, vidro, metal e eletrônicos. Para materiais maiores (móveis, eletrodomésticos), verifique com o centro antes.</div>
 
-                <div class="center-info" style="margin-top: 2rem;">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
-                  <div>
-                    <h4>Endereço</h4>
-                    <p>Rua da Sustentabilidade, 123<br>São Paulo, SP 01000-000</p>
-                  </div>
-                </div>
+                <button class="faq-q" data-target="faq2">Como agendo uma coleta?</button>
+                <div id="faq2" class="faq-a" style="display:none;">Vá em "Agendar Doação", escolha "Solicitar coleta", preencha endereço e data/hora disponível.</div>
+
+                <button class="faq-q" data-target="faq3">Preciso pagar pela coleta?</button>
+                <div id="faq3" class="faq-a" style="display:none;">A maioria das coletas é gratuita. Em casos especiais (distância grande), pode haver taxa — será informada ao confirmar o agendamento.</div>
+              </div>
+
+              <div style="margin-top:12px;">
+                <a id="whatsapp-btn" class="btn btn-primary" href="https://wa.me/5511999999999?text=Ol%C3%A1%20EcoRecicla!%20Gostaria%20de%20ajuda" target="_blank" rel="noopener">
+                  Abrir WhatsApp
+                </a>
+                <a href="#donate" class="btn btn-secondary" style="margin-left:8px;">Agendar Coleta / Doação</a>
               </div>
             </div>
 
-            <!-- Formulário de Contato -->
-            <div>
-              <h3>Envie uma Mensagem</h3>
-              <form id="contact-form" method="POST" action="php/contato_salvar.php" style="margin-top: 2rem;">
-                <div class="form-group">
-                  <label for="contact-nome">Nome *</label>
-                  <input type="text" id="contact-nome" name="nome" placeholder="Seu nome" required>
-                  <span class="error-message"></span>
-                </div>
+            <div style="flex:1; min-width:300px;">
+              <div class="card">
+                <h3>Informações de Contato</h3>
+                <p><strong>Email:</strong> contato@ecorecicla.com.br</p>
+                <p><strong>Telefone:</strong> (11) 3000-0000</p>
+                <p><strong>Endereço (sede):</strong> Rua da Sustentabilidade, 123 — São Paulo, SP</p>
+              </div>
 
-                <div class="form-group">
-                  <label for="contact-email">Email *</label>
-                  <input type="email" id="contact-email" name="email" placeholder="seu@email.com" required>
-                  <span class="error-message"></span>
-                </div>
-
-                <div class="form-group">
-                  <label for="contact-telefone">Telefone</label>
-                  <input type="tel" id="contact-telefone" name="telefone" placeholder="(11) 99999-9999">
-                </div>
-
-                <div class="form-group">
-                  <label for="contact-mensagem">Mensagem *</label>
-                  <textarea id="contact-mensagem" name="mensagem" placeholder="Sua mensagem..." required></textarea>
-                  <span class="error-message"></span>
-                </div>
-
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Enviar Mensagem</button>
-              </form>
+              <div class="card" style="margin-top:12px;">
+                <h3>Denúncias ou Problemas</h3>
+                <p>Se encontrou irregularidades em pontos de coleta, use WhatsApp ou envie mensagem com fotos e endereço para que possamos encaminhar.</p>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </div>
 
-    <!-- PÁGINA DOAÇÕES -->
-<div id="page-donate" style="display: none;">
-  <section class="form-page">
-    <div class="form-wrapper">
+    <!-- PÁGINA DOAÇÕES (substituída por Agendador de Coleta) -->
+    <div id="page-donate" style="display: none;">
+      <section>
+        <div class="container">
+          <h2 style="color:var(--green); margin-bottom: 0.5rem;">Agende sua Coleta ou escolha um Centro</h2>
+          <p style="color:#475569; margin-bottom:1rem;">Escolha se prefere entregar em um centro ou solicitar coleta em seu endereço. Após confirmar, você receberá instruções por WhatsApp 📞📱</p>
 
-      <h2>Fazer uma Doação</h2>
-      <p style="text-align: center; color: #4b5563; margin-bottom: 2rem;">
-        Ajude-nos a reciclar! Preencha o formulário abaixo com os detalhes de sua doação.
-      </p>
+          <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            <div style="flex:1; min-width:300px;">
+              <div class="card">
+                <label for="donation-mode"><strong>Opção</strong></label>
+                <select id="donation-mode">
+                  <option value="center">Levarei até um centro</option>
+                  <option value="pickup">Solicitar coleta</option>
+                </select>
 
-      <form id="donate-form" method="POST" action="php/doacao_salvar.php">
+                <label for="donation-material" style="margin-top:0.75rem;"><strong>Tipo de material</strong></label>
+                <select id="donation-material">
+                  <option value="">-- selecione --</option>
+                  <option value="plastico">Plástico</option>
+                  <option value="papel">Papel/Papelão</option>
+                  <option value="vidro">Vidro</option>
+                  <option value="metal">Metal</option>
+                  <option value="eletronico">Eletrônico</option>
+                  <option value="organico">Orgânico</option>
+                </select>
 
-        <!-- Informações do Doador -->
-        <h3>Informações do Doador</h3>
+                <label style="display:block; margin-top:0.75rem;"><strong>Quantidade</strong></label>
+                <input id="donation-qty" placeholder="Ex: 10 kg, 5 caixas" />
 
-        <div class="grid grid-2" style="">
-          <div class="form-group">
-            <label for="donate-name">Nome *</label>
-            <input type="text" id="donate-name" name="nome" placeholder="Seu nome" required>
-            <span class="error-message"></span>
+                <label style="display:block; margin-top:0.75rem;"><strong>Telefone para contato</strong></label>
+                <input id="donation-phone" placeholder="(11) 99999-9999" />
+
+                <div id="pickup-fields" style="display:none; margin-top:0.75rem;">
+                  <label><strong>Endereço para coleta</strong></label>
+                  <input id="pickup-address" placeholder="Rua, número, complemento, cidade, CEP" />
+                </div>
+
+                <label style="display:block; margin-top:0.75rem;"><strong>Data</strong></label>
+                <input type="date" id="donation-date" />
+
+                <label style="display:block; margin-top:0.5rem;"><strong>Hora</strong></label>
+                <input type="time" id="donation-time" />
+
+                <div style="margin-top:0.75rem; display:flex; gap:8px;">
+                  <button id="confirm-schedule" class="btn btn-primary">Confirmar Agendamento</button>
+                  <button id="clear-schedule" class="btn" style="background:#fff; border:1px solid #e6eef2;">Limpar</button>
+                </div>
+
+                <div id="schedule-feedback" style="margin-top:10px; color:#064e3b;"></div>
+              </div>
+            </div>
+
+            <div style="flex:1; min-width:320px;">
+              <div class="card">
+                <h3>Mapa de Centros</h3>
+                <div id="donation-map" style="height:300px; border-radius:6px; margin-top:8px;"></div>
+                <p style="font-size:0.9rem; color:#6b7280; margin-top:8px;">Clique num centro no mapa para ver detalhes e disponibilidade.</p>
+              </div>
+
+              <div class="card" style="margin-top:12px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <h3 style="margin:0;">Seus Agendamentos </h3>
+                  <div class="schedules-controls">
+                    <!-- Selecionar todos -->
+                    <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; color:#374151;">
+                      <input type="checkbox" id="select-all-schedules" title="Selecionar/Deselecionar todos" />
+                      Selecionar todos
+                    </label>
+                    <button id="clear-all-schedules" class="btn btn-danger" title="Remover agendamentos selecionados">Remover selecionados</button>
+                  </div>
+                </div>
+                <div id="schedules-list" style="margin-top:8px;"></div>
+              </div>
+            </div>
           </div>
-
-          <div class="form-group">
-            <label for="donate-email">Email *</label>
-            <input type="email" id="donate-email" name="email" placeholder="seu@email.com" required>
-            <span class="error-message"></span>
-          </div>
         </div>
-
-        <div class="form-group">
-          <label for="donate-phone">Telefone</label>
-          <input type="tel" id="donate-phone" name="telefone" placeholder="(11) 99999-9999">
-        </div>
-
-        <!-- Detalhes da Doação -->
-        <h3>Detalhes da Doação</h3>
-
-        <div class="grid grid-2">
-          <div class="form-group">
-            <label for="donate-type">Tipo de Item *</label>
-            <select id="donate-type" name="tipo_item" required>
-              <option value="">Selecione um tipo</option>
-              <option value="plastico">Plástico</option>
-              <option value="papel">Papel/Papelão</option>
-              <option value="vidro">Vidro</option>
-              <option value="metal">Metal</option>
-              <option value="eletronico">Eletrônico</option>
-              <option value="organico">Orgânico</option>
-              <option value="outro">Outro</option>
-            </select>
-            <span class="error-message"></span>
-          </div>
-
-          <div class="form-group">
-            <label for="donate-quantity">Quantidade *</label>
-            <input type="text" id="donate-quantity" name="quantidade" placeholder="Ex: 10 kg, 50 unidades" required>
-            <span class="error-message"></span>
-          </div>
-        </div>
-
-        <!-- Opções de Coleta -->
-        <h3>Opções de Coleta</h3>
-
-        <div class="checkbox-group">
-          <input type="checkbox" id="donate-pickup" name="coleta" value="1">
-          <label for="donate-pickup">Solicitar coleta em meu endereço</label>
-        </div>
-
-        <div id="address-group" class="form-group" style="display: none;">
-          <label for="donate-address">Endereço para Coleta *</label>
-          <textarea id="donate-address" name="endereco" placeholder="Rua, número, complemento, cidade, estado, CEP"></textarea>
-          <span class="error-message"></span>
-        </div>
-
-        <button type="submit" class="btn btn-primary">
-          Registrar Doação
-        </button>
-
-      </form>
+      </section>
     </div>
-  </section>
-</div>
- </div>
 
     <!-- PÁGINA CENTROS DE DOAÇÃO -->
     <div id="page-centers" style="display: none;">
       <section>
         <div class="container">
-          <h2 style="color: #15803d; margin-bottom: 2rem;">Centros de Doação</h2>
+          <h2 style="color: var(--green); margin-bottom: 1rem;">Centros de Doação</h2>
 
-          <!-- Filtro -->
-          <div class="map-filter">
+          <div style="margin-bottom:0.75rem;">
             <label for="center-filter">Filtrar por tipo de material:</label>
             <select id="center-filter" onchange="handleCenterFilter(this.value)">
               <option value="">Todos os tipos</option>
@@ -344,16 +329,12 @@
             </select>
           </div>
 
-          <!-- Mapa -->
           <h3>Mapa Interativo</h3>
-          <div id="map" style="margin-bottom: 2rem;"></div>
+          <div id="map" style="margin-bottom: 1rem;"></div>
 
-          <!-- Lista de Centros -->
-          <h3 style="margin-top: 2rem;">Centros Disponíveis</h3>
-          <div id="centers-list" class="centers-list" style="margin-top: 1rem;">
-            <div class="alert alert-info">
-              <span>Carregando centros de doação...</span>
-            </div>
+          <h3 style="margin-top: 1rem;">Centros Disponíveis</h3>
+          <div id="centers-list" class="centers-list" style="margin-top: 0.75rem;">
+            <div class="alert alert-info"><span>Carregando centros de doação...</span></div>
           </div>
         </div>
       </section>
@@ -368,7 +349,415 @@
     </div>
   </footer>
 
-  <!-- Scripts -->
-  <script src="js/app.js"></script>
+  <!-- Scripts: roteador, mapas, agendador, FAQ/WhatsApp -->
+  <script>
+  (function () {
+    /* ---------- Router & Page handling ---------- */
+    const pages = document.querySelectorAll('[id^="page-"]');
+    const navLinks = document.querySelectorAll('a[href^="#"]');
+    const defaultPage = 'page-home';
+
+    function hideAllPages() {
+      pages.forEach(p => p.style.display = 'none');
+    }
+
+    function setActiveLink(hashName) {
+      navLinks.forEach(a => {
+        const href = a.getAttribute('href') || '';
+        const h = href.replace('#', '').replace('page-', '');
+        a.classList.toggle('active', h === hashName);
+      });
+    }
+
+    function showPageFromHash() {
+      let hash = location.hash.replace('#', '');
+      if (!hash) hash = 'home';
+      const pageId = hash.startsWith('page-') ? hash : `page-${hash}`;
+      const el = document.getElementById(pageId);
+
+      hideAllPages();
+      if (el) {
+        el.style.display = 'block';
+      } else {
+        const fallback = document.getElementById(defaultPage);
+        if (fallback) fallback.style.display = 'block';
+      }
+      setActiveLink(hash.replace('page-', ''));
+
+      // If centers page shown, initialize centers map
+      if (pageId === 'page-centers') {
+        initCentersMapIfNeeded();
+      }
+      // If donate page shown, ensure donation map initialized
+      if (pageId === 'page-donate') {
+        initDonationMapIfNeeded();
+      }
+    }
+
+    window.addEventListener('hashchange', showPageFromHash);
+
+    // Shrink header when scrolling
+    function handleHeaderShrink() {
+      const header = document.querySelector('header');
+      if (!header) return;
+      const threshold = 18;
+      // set initial state (in case page loads scrolled)
+      header.classList.toggle('scrolled', window.scrollY > threshold);
+      window.addEventListener('scroll', () => {
+        header.classList.toggle('scrolled', window.scrollY > threshold);
+      }, { passive: true });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showPageFromHash();
+
+      // setup header shrink
+      handleHeaderShrink();
+
+      // attach FAQ toggles
+      document.querySelectorAll('.faq-q').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.target;
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        });
+      });
+    });
+
+    /* ---------- Centers data & Map ---------- */
+    const centersData = [
+      { id: 1, name: 'Centro Verde SP', lat: -23.55052, lng: -46.633308, type: 'plastico', address: 'Rua A, 100 - São Paulo', info: 'Aceita plástico, papel e vidro' },
+      { id: 2, name: 'Recicla Paulista', lat: -23.559616, lng: -46.658905, type: 'papel', address: 'Av. Paulista, 500 - São Paulo', info: 'Aceita papel, papelão e eletrônicos' },
+      { id: 3, name: 'Vidro & Cia', lat: -23.543, lng: -46.642, type: 'vidro', address: 'Rua B, 250 - São Paulo', info: 'Especializado em vidro' },
+      { id: 4, name: 'Eletrônicos SP', lat: -23.565, lng: -46.635, type: 'eletronico', address: 'Rua C, 88 - São Paulo', info: 'Recebe pequenos eletrônicos' },
+      { id: 5, name: 'Metal Recicla', lat: -23.540, lng: -46.620, type: 'metal', address: 'Rua D, 10 - São Paulo', info: 'Aceita metais e sucatas' }
+    ];
+
+    // Centers map variables
+    let centersMap = null;
+    let centersMarkersLayer = null;
+    let centersMapInitialized = false;
+
+    function initCentersMapIfNeeded() {
+      if (centersMapInitialized) {
+        // ensure map resizes when showing
+        setTimeout(() => { try { centersMap.invalidateSize(); } catch(e) {} }, 200);
+        return;
+      }
+      if (typeof L === 'undefined') {
+        const listEl = document.getElementById('centers-list');
+        if (listEl) listEl.innerHTML = '<div class="alert alert-danger">Leaflet não carregado.</div>';
+        return;
+      }
+      try {
+        centersMap = L.map('map').setView([-23.55052, -46.633308], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(centersMap);
+        centersMarkersLayer = L.layerGroup().addTo(centersMap);
+        centersMapInitialized = true;
+        populateCentersListAndMarkers('');
+      } catch (err) {
+        console.error('Erro ao inicializar mapa de centros:', err);
+        const centersList = document.getElementById('centers-list');
+        if (centersList) centersList.innerHTML = '<div class="alert alert-danger">Não foi possível carregar o mapa.</div>';
+      }
+    }
+
+    function populateCentersListAndMarkers(filterType) {
+      if (!centersMarkersLayer || !centersMap) return;
+      centersMarkersLayer.clearLayers();
+      const listEl = document.getElementById('centers-list');
+      if (!listEl) return;
+
+      listEl.innerHTML = '';
+      const filtered = centersData.filter(c => !filterType || c.type === filterType);
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="alert alert-info"><span>Nenhum centro encontrado para esse filtro.</span></div>';
+        return;
+      }
+
+      filtered.forEach(c => {
+        const marker = L.marker([c.lat, c.lng]).addTo(centersMarkersLayer);
+        marker.bindPopup(`<strong>${c.name}</strong><br>${c.address}<br><em>${c.info}</em>`);
+        const item = document.createElement('div');
+        item.className = 'center-item';
+        item.innerHTML = `
+          <strong>${c.name}</strong><br>
+          <small>${c.address}</small><br>
+          <small>Tipo: ${c.type}</small><br>
+          <a href="#" data-lat="${c.lat}" data-lng="${c.lng}" class="center-zoom">Ir para no mapa</a>
+        `;
+        listEl.appendChild(item);
+      });
+
+      listEl.querySelectorAll('.center-zoom').forEach(a => {
+        a.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const lat = parseFloat(a.dataset.lat);
+          const lng = parseFloat(a.dataset.lng);
+          if (centersMap && !isNaN(lat) && !isNaN(lng)) {
+            centersMap.setView([lat, lng], 15);
+          }
+        });
+      });
+    }
+
+    window.handleCenterFilter = function(value) {
+      const v = value || '';
+      if (!centersMapInitialized) {
+        initCentersMapIfNeeded();
+      }
+      populateCentersListAndMarkers(v);
+    };
+
+    /* ---------- Donation scheduler (replacement for form) ---------- */
+    // donation map variables
+    let donationMap = null;
+    let donationMapInitialized = false;
+
+    // reuse centersData for donation map (same markers)
+    function initDonationMapIfNeeded() {
+      if (donationMapInitialized) {
+        setTimeout(() => { try { donationMap.invalidateSize(); } catch(e) {} }, 200);
+        return;
+      }
+      if (typeof L === 'undefined') return;
+      try {
+        donationMap = L.map('donation-map', { attributionControl:false }).setView([-23.55052, -46.633308], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(donationMap);
+        centersData.forEach(c => {
+          const m = L.marker([c.lat, c.lng]).addTo(donationMap);
+          m.bindPopup(`<strong>${c.name}</strong><br>${c.info}<br><small>${c.address}</small>`);
+          m.on('click', () => { donationMap.setView([c.lat, c.lng], 15); });
+        });
+        donationMapInitialized = true;
+      } catch (err) {
+        console.error('Erro ao inicializar donation map:', err);
+      }
+    }
+
+    // scheduling storage key
+    const SCHEDULE_KEY = 'ecorec_schedules_v1';
+
+    // Renders schedules with checkboxes for selection
+    function renderSchedules() {
+      const list = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || '[]');
+      const el = document.getElementById('schedules-list');
+      if (!el) return;
+      if (list.length === 0) { el.innerHTML = '<div class="alert">Nenhum agendamento.</div>'; return; }
+
+      // Build HTML including checkbox per schedule
+      el.innerHTML = list.map(s => {
+        return `
+        <div style="display:flex; gap:8px; align-items:flex-start; padding:8px;border-radius:6px;background:#fff;margin-bottom:8px;border:1px solid #eef2ff;">
+          <div style="flex:0 0 28px;">
+            <input type="checkbox" class="schedule-checkbox" data-id="${s.id}" title="Selecionar agendamento" />
+          </div>
+          <div style="flex:1;">
+            <strong>${escapeHtml(s.material)} — ${escapeHtml(s.qty)}</strong><br>
+            ${s.phone ? '<strong>Tel:</strong> ' + escapeHtml(s.phone) + '<br>' : ''}
+            ${s.mode === 'pickup' ? 'Coleta em: '+ escapeHtml(s.address) + '<br>' : 'Centro: ' + (escapeHtml(s.center)||'---') + '<br>'}
+            ${escapeHtml(s.date)} ${escapeHtml(s.time)} — <small style="color:#6b7280;">agendado em ${new Date(s.created_at).toLocaleString()}</small>
+          </div>
+        </div>
+        `;
+      }).join('');
+
+      // After rendering, wire up checkbox behaviors (select all control handled separately)
+      // (No extra work needed here unless we want per-item events)
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"'`=\/]/g, function(s) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`':'&#x60;', '=':'&#x3D;' })[s];
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Donate scheduler UI handlers
+      const modeSel = document.getElementById('donation-mode');
+      const pickupFields = document.getElementById('pickup-fields');
+      if (modeSel && pickupFields) {
+        modeSel.addEventListener('change', (e) => {
+          pickupFields.style.display = e.target.value === 'pickup' ? 'block' : 'none';
+        });
+      }
+
+      document.getElementById('confirm-schedule')?.addEventListener('click', () => {
+        const mode = document.getElementById('donation-mode')?.value || 'center';
+        const material = document.getElementById('donation-material')?.value || '';
+        const qty = document.getElementById('donation-qty')?.value?.trim() || '';
+        const phone = document.getElementById('donation-phone')?.value?.trim() || '';
+        const date = document.getElementById('donation-date')?.value || '';
+        const time = document.getElementById('donation-time')?.value || '';
+        const address = document.getElementById('pickup-address')?.value?.trim() || '';
+        const feedback = document.getElementById('schedule-feedback');
+
+        // validação: agora exige telefone  — se preferir tornar opcional, remova esta checagem
+        if (!material || !qty || !date || !time) {
+          if (feedback) feedback.innerText = 'Preencha material, quantidade, data e hora.';
+          return;
+        }
+        if (!phone) {
+          if (feedback) feedback.innerText = 'Por favor informe um telefone para contato.';
+          return;
+        }
+        if (mode === 'pickup' && !address) {
+          if (feedback) feedback.innerText = 'Por favor informe o endereço para coleta.';
+          return;
+        }
+
+        const arr = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || '[]');
+        arr.push({ id: Date.now(), mode, material, qty, phone, date, time, address, created_at: new Date().toISOString() });
+        localStorage.setItem(SCHEDULE_KEY, JSON.stringify(arr));
+        if (feedback) feedback.innerText = 'Agendamento salvo. Você receberá instruções por WhatsApp ou e-mail.';
+        renderSchedules();
+
+        // clear inputs
+        document.getElementById('donation-qty').value = '';
+        document.getElementById('donation-phone').value = '';
+        document.getElementById('donation-date').value = '';
+        document.getElementById('donation-time').value = '';
+        document.getElementById('pickup-address').value = '';
+
+        // ensure "select all" is unchecked after adding
+        const selectAll = document.getElementById('select-all-schedules');
+        if (selectAll) selectAll.checked = false;
+      });
+
+      document.getElementById('clear-schedule')?.addEventListener('click', () => {
+        document.getElementById('donation-qty').value = '';
+        document.getElementById('donation-phone').value = '';
+        document.getElementById('donation-date').value = '';
+        document.getElementById('donation-time').value = '';
+        document.getElementById('pickup-address').value = '';
+        const feedback = document.getElementById('schedule-feedback');
+        if (feedback) feedback.innerText = '';
+      });
+
+      // Render saved schedules initially
+      renderSchedules();
+
+      // ---------- UPDATED: Remove only selected schedules ----------
+      const clearSelectedBtn = document.getElementById('clear-all-schedules');
+      const selectAllCheckbox = document.getElementById('select-all-schedules');
+
+      // When user toggles "select all", check/uncheck all rendered checkboxes
+      function updateAllCheckboxes(checked) {
+        document.querySelectorAll('.schedule-checkbox').forEach(cb => {
+          cb.checked = !!checked;
+        });
+      }
+
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', () => {
+          updateAllCheckboxes(selectAllCheckbox.checked);
+        });
+      }
+
+      // When schedules are re-rendered, wire the select-all to their state automatically
+      // We'll attach a small observer to update the select-all checkbox when individual change occurs
+      function attachCheckboxListeners() {
+        document.querySelectorAll('.schedule-checkbox').forEach(cb => {
+          cb.addEventListener('change', () => {
+            // if any checkbox is unchecked, uncheck select-all; if all checked, check select-all
+            const all = Array.from(document.querySelectorAll('.schedule-checkbox'));
+            const allChecked = all.length > 0 && all.every(c => c.checked);
+            if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+          });
+        });
+      }
+
+      // Re-attach listeners after each render
+      const originalRenderSchedules = renderSchedules;
+      renderSchedules = function() {
+        originalRenderSchedules();
+        attachCheckboxListeners();
+      };
+
+      // Replace the global function reference so other code continues to work
+      window.renderSchedules = renderSchedules;
+
+      // Handler to remove only selected items
+      if (clearSelectedBtn) {
+        clearSelectedBtn.addEventListener('click', () => {
+          // collect checked schedule ids
+          const checked = Array.from(document.querySelectorAll('.schedule-checkbox'))
+            .filter(cb => cb.checked)
+            .map(cb => Number(cb.dataset.id))
+            .filter(Boolean);
+
+          if (!checked || checked.length === 0) {
+            alert('Nenhum agendamento selecionado. Marque os agendamentos que deseja remover.');
+            return;
+          }
+
+          const confirmed = confirm(`Tem certeza que deseja remover ${checked.length} agendamento(s) selecionado(s)? Esta ação não pode ser desfeita.`);
+          if (!confirmed) return;
+
+          const arr = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || '[]');
+          const filtered = arr.filter(item => !checked.includes(item.id));
+          localStorage.setItem(SCHEDULE_KEY, JSON.stringify(filtered));
+          renderSchedules();
+          // after removal, uncheck select-all
+          if (selectAllCheckbox) selectAllCheckbox.checked = false;
+          alert(`${checked.length} agendamento(s) removido(s).`);
+        });
+      }
+      // ---------------------------------------------------
+
+    });
+
+    /* ---------- Contact & small form fallbacks ---------- */
+    // No contact POSTs: use WhatsApp CTA + localStorage fallback for messages
+    const CONTACT_KEY = 'ecorec_contacts_v1';
+    document.addEventListener('DOMContentLoaded', () => {
+      const contactForm = document.getElementById('contact-form');
+      if (!contactForm) return;
+      contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nome = (document.getElementById('contact-nome') || {}).value?.trim() || '';
+        const email = (document.getElementById('contact-email') || {}).value?.trim() || '';
+        const telefone = (document.getElementById('contact-telefone') || {}).value?.trim() || '';
+        const mensagem = (document.getElementById('contact-mensagem') || {}).value?.trim() || '';
+        if (!nome || !email || !mensagem) { alert('Por favor, preencha nome, e-mail e mensagem.'); return; }
+        const contacts = JSON.parse(localStorage.getItem(CONTACT_KEY) || '[]');
+        contacts.push({ id: Date.now(), nome, email, telefone, mensagem, created_at: new Date().toISOString() });
+        localStorage.setItem(CONTACT_KEY, JSON.stringify(contacts));
+        alert('Mensagem salva localmente (modo demo). Obrigado pelo contato!');
+        contactForm.reset();
+        location.hash = '#home';
+      });
+    });
+
+    /* ---------- Simple Centers filter hookup for donation map too ---------- */
+    // When centers filter changes, apply to centers map and also to donation map markers (if needed)
+    // We already exposed handleCenterFilter for centers page. For donation map, we keep it simple.
+
+    /* ---------- Ensure maps initialize when pages shown ---------- */
+    // Ensure when hash changes to pages, maps init
+    window.addEventListener('hashchange', () => {
+      const h = location.hash.replace('#', '');
+      if (h === 'centers') initCentersMapIfNeeded();
+      if (h === 'donate') initDonationMapIfNeeded();
+    });
+
+    /* ---------- Utility: Initialize donation map if user navigates directly ---------- */
+    if (location.hash.replace('#','') === 'donate') {
+      // try to init donation map once DOM ready
+      document.addEventListener('DOMContentLoaded', initDonationMapIfNeeded);
+    }
+
+    /* ---------- Small helper to open WhatsApp with prefilled message (if user clicks programmatically) ---------- */
+    function openWhatsAppPrefilled(text) {
+      const phone = '5511999999999'; // TODO: substitua pelo seu número (formato internacional sem +)
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank', 'noopener');
+    }
+    // Expose for debug if needed
+    window.openWhatsAppPrefilled = openWhatsAppPrefilled;
+  })();
+  </script>
 </body>
 </html>
